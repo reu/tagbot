@@ -1,0 +1,23 @@
+{
+  "name": "Tagbot",
+  "version": "1.0.0",
+  "description": "Tagview personal slack bot",
+  "main": "index.js",
+  "scripts": {
+    "start": "./node_modules/.bin/babel-node index.js",
+    "repl": "./node_modules/.bin/babel-node"
+  },
+  "author": "Rodrigo Navarro <rnavarro@rnavarro.com.br>",
+  "license": "MIT",
+  "dependencies": {
+    "babel": "^5.1.11",
+    "express": "^4.12.3",
+    "mysql": "^2.6.2",
+    "s3": "^4.4.0",
+    "slack-client": "^1.4.0",
+    "url-join": "0.0.1"
+  },
+  "devDependencies": {
+    "dotenv": "^1.1.0"
+  }
+}
