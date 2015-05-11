@@ -9,9 +9,12 @@ var PHABRICATOR_DB_URL = process.env.PHABRICATOR_DB_URL;
 var PHABRICATOR_S3_BUCKET = process.env.PHABRICATOR_S3_BUCKET;
 var AWS_KEY_ID = process.env.AWS_KEY_ID;
 var AWS_SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY;
+var SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL;
 
 var express = require("express");
 var urljoin = require("url-join");
+var request = require("request");
+var cowsay = require("cowsay");
 var log = console.log;
 
 var MemeRepository = require("./meme/phabricator/repository");
@@ -78,6 +81,22 @@ app.get("/meme", (req, res) => {
     res.writeHead(200, { "Content-Type": "text/plain" });
     res.write(memes.join("\n")).end();
   });
+});
+
+// Slack slash command /cowsay
+app.get("/cowsay", (req, res) => {
+  request({
+    uri: SLACK_WEBHOOK_URL,
+    method: "POST",
+    json: {
+      text: "```\n" + cowsay.say({ text: req.query.text }) + "\n```",
+      channel: "#" + req.query.channel_name,
+      username: "cow",
+      icon_emoji: ":cow:"
+    }
+  });
+
+  res.status(204).end();
 });
 
 var memePath = "/meme/:name";
