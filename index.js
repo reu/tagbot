@@ -10,6 +10,9 @@ var PHABRICATOR_S3_BUCKET = process.env.PHABRICATOR_S3_BUCKET;
 var AWS_KEY_ID = process.env.AWS_KEY_ID;
 var AWS_SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY;
 var SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL;
+var CONDUIT_USER = process.env.CONDUIT_USER;
+var CONDUIT_CERTIFICATE = process.env.CONDUIT_CERTIFICATE;
+var CONDUIT_API_URL = process.env.CONDUIT_API_URL;
 
 var express = require("express");
 var urljoin = require("url-join");
@@ -21,11 +24,16 @@ var MemeRepository = require("./meme/phabricator/repository");
 var MemeDownloader = require("./meme/phabricator/downloader");
 var VoteRepository = require("./vote/repository");
 var Bot = require("./slack/bot");
+var Conduit = require("./phabricator/conduit");
+var PhabricatorNotificator = require("./phabricator/notificator");
 
 var memeDownloader = new MemeDownloader(PHABRICATOR_S3_BUCKET, AWS_KEY_ID, AWS_SECRET_ACCESS_KEY);
 var memeRepository = new MemeRepository(PHABRICATOR_DB_URL, memeDownloader);
 var voteRepository = new VoteRepository();
 var bot = new Bot(BOT_TOKEN);
+
+var conduit = new Conduit(CONDUIT_USER, CONDUIT_CERTIFICATE, CONDUIT_API_URL);
+var phabricatorNotificator = new PhabricatorNotificator(conduit);
 
 // Pool upvote
 // ex: +sauce
@@ -113,6 +121,11 @@ app.get(memePath, (req, res) => {
 bot.memeUrl = function(meme) {
   return urljoin(APP_URL, memePath).replace(":name", meme);
 }
+
+phabricatorNotificator.feed().subscribe(function(diffUpdate) {
+  console.log("Diff:", diffUpdate.diff.title);
+  bot.postDiff(diffUpdate);
+});
 
 var server = app.listen(process.env.PORT || 3000, () => {
   log("Server listening port", server.address().port);

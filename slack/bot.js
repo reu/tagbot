@@ -45,6 +45,37 @@ module.exports = class Bot {
     });
   }
 
+  postDiff(diffUpdate) {
+    [
+      diffUpdate.user.userName,
+      diffUpdate.diff.author.userName
+    ].concat(diffUpdate.diff.reviewers.map((u) => u.userName))
+     .filter((u) => u != diffUpdate.user.userName)
+     .map((userName) => this.slack.getDMByName(userName))
+     .filter((dm) => dm != null)
+     .forEach((dm) => {
+       dm.postMessage({
+         as_user: true,
+         username: this.name,
+         attachments: [{
+           title: "D" + diffUpdate.diff.id,
+           title_link: diffUpdate.diff.url,
+           fallback: diffUpdate.text,
+           text: diffUpdate.text,
+           fields: [{
+             title: "Title",
+             value: diffUpdate.diff.title,
+             short: true
+           }, {
+             title: "Status",
+             value: diffUpdate.diff.status,
+             short: true
+           }]
+         }]
+       });
+     });
+  }
+
   start(callback) {
     if (callback) this.slack.once("open", () => callback(this.slack.self.name));
     this.slack.login();
