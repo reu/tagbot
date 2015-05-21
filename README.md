@@ -7,8 +7,18 @@ A Slack bot for [Tagview](http://www.tagview.com.br)
 # Features
 
 - Phabricator Macros: yeah, the most important one
-- Phabricator Diffs: just link generation
+- Phabricator Diffs: link generation and notification
 - Votes: +awesome
+
+# Configuration
+
+The bot configuration is done via environment variables, which are:
+
+- `APP_URL`: full URL where the bot application is hosted
+- `BOT_TOKEN`: Slack Bot token
+- `CONDUIT_USER`: Phabriactor user that has access to the Conduit API
+- `CONDUIT_API_URL`: Phabricator Conduit API URL, ex: http://phabricator.com/api/
+- `CONDUIT_CERTIFICATE`: Phabricator Conduit API authentication certificate
 
 # Tests
 ![hahaha no](https://dl.dropboxusercontent.com/u/732128/81f2deb5142749624159709399_700wa_0.gif)
