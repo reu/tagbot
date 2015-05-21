@@ -1,65 +1,38 @@
-"use strict";
-
-var mysql = require("mysql");
+var es = require("event-stream");
 var Meme = require("../meme");
 
-var listMemesQuery = `
-SELECT
-  file_imagemacro.name as name, file.storageHandle as url
-FROM
-  file_imagemacro
-JOIN
-  file on file.phid=filePHID`;
-
-var findMemeQuery = `
-SELECT
-  storageHandle as url
-FROM
-  file
-WHERE
-  phid=(
-    SELECT
-      filePHID
-    FROM
-      file_imagemacro
-    WHERE
-      name = ?
-  )
-`;
-
 module.exports = class MemeRepository {
-  constructor(db, downloader) {
-    if (typeof db == "string") {
-      this.db = mysql.createPool(db);
-    } else {
-      this.db = db;
-    }
-
-    this.downloader = downloader;
+  constructor(conduit) {
+    this.conduit = conduit;
   }
 
   listMemes() {
-    return new Promise((resolve, reject) => {
-      this.db.query(listMemesQuery, (error, rows) => {
-        if (error) return reject(error);
-
-        resolve(rows.map(row => this.buildMeme(row.name, row.url)));
+    return this.conduit.listMacros().then((macros) => {
+      console.log(macros);
+      return Object.keys(macros).map((name) => {
+        return this.buildMeme(name, macros[name].filePHID);
       });
     });
   }
 
   findMeme(name) {
-    return new Promise((resolve, reject) => {
-      this.db.query(findMemeQuery, [name], (error, rows) => {
-        if (error) return reject(error);
-        if (!rows[0] || !rows[0].url) return reject(new Error("Meme not found"));
-
-        resolve(this.buildMeme(name, rows[0].url));
-      });
+    console.log("Finding macro", name);
+    return this.conduit.findMacroByName(name).then((meme) => {
+      return this.buildMeme(meme.name, meme.filePHID);
     });
   }
 
-  buildMeme(name, imagePath) {
-    return new Meme(name, () => this.downloader.memeStream(imagePath));
+  buildMeme(name, fileId) {
+    return new Meme(name, () => {
+      var file = this.conduit.dowloadFile(fileId);
+
+      return es.readable(function(count, callback) {
+        file.then((data) => {
+          this.emit("data", data);
+          this.emit("end");
+          callback();
+        });
+      });
+    });
   }
 }

@@ -39,4 +39,24 @@ module.exports = class Conduit {
       return Promise.resolve([]);
     }
   }
+
+  listMacros() {
+    return this.call("macro.query");
+  }
+
+  findMacroByName(name) {
+    return this.call("macro.query", { names: [name] }).then(function(macros) {
+      return Object.keys(macros).map(function(name) {
+        var macro = macros[name];
+        macro.name = name;
+        return macro;
+      })[0];
+    });
+  }
+
+  dowloadFile(id) {
+    return this.call("file.download", { phid: id }).then(function(file) {
+      return new Buffer(file, "base64");
+    });
+  }
 }

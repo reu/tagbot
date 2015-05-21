@@ -13,6 +13,7 @@
     "babel": "^5.1.11",
     "canduit": "^1.0.0",
     "cowsay": "^1.1.0",
+    "event-stream": "^3.3.1",
     "express": "^4.12.3",
     "mysql": "^2.6.2",
     "request": "^2.55.0",
